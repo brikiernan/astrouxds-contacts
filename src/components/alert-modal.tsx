@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RuxButton, RuxModal } from '@astrouxds/react';
+import { RuxButton, RuxDialog } from '@astrouxds/react';
 import { Heading, Stack, Text } from '@chakra-ui/react';
 
 import type { Alert } from '../models';
@@ -22,7 +22,11 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       <RuxButton size='small' onClick={() => setOpen(true)}>
         Details
       </RuxButton>
-      <RuxModal open={open} modalTitle={`Alerts for contact ${contactName}`}>
+      <RuxDialog
+        open={open}
+        onRuxdialogclosed={() => setOpen(false)}
+        title={`Alerts for contact ${contactName}`}
+      >
         <Stack spacing='4' whiteSpace='normal'>
           <Heading size='md' mb='2'>
             Satellite: {contactSatellite}
@@ -33,7 +37,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
             </Stack>
           ))}
         </Stack>
-      </RuxModal>
+      </RuxDialog>
     </>
   );
 };

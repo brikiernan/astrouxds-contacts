@@ -1,24 +1,36 @@
-import { useMemo } from 'react';
-import { Center, HStack, Text } from '@chakra-ui/react';
+import { useMemo, lazy, useRef } from 'react';
 import {
-  RuxCheckbox,
   RuxTable,
   RuxTableBody,
-  RuxTableCell,
   RuxTableHeader,
   RuxTableHeaderRow,
   RuxTableHeaderCell,
-  RuxTableRow,
 } from '@astrouxds/react';
 
 import type { Contact } from './models';
-import data from './data.json';
-import { AlertModal } from './components/alert-modal';
+import datas from './data.json';
+import useLazyLoad from './hooks/use-lazy-load';
+
+const ContactRow = lazy(() => import('./components/contact-row'));
 
 const sort = (a: Contact, b: Contact) => b.alerts.length - a.alerts.length;
 
+const perPage = 36;
+
 const App: React.FC = () => {
-  const contacts = useMemo(() => data.sort(sort), []);
+  const contacts = useMemo(() => datas.sort(sort), []);
+  const triggerRef = useRef(null);
+
+  const setData = (currentPosition: number) => {
+    return contacts.slice(currentPosition, currentPosition + perPage);
+  };
+
+  const { data, hasMore } = useLazyLoad({
+    triggerRef,
+    setData,
+    perPage,
+    total: contacts.length,
+  });
 
   return (
     <RuxTable>
@@ -35,29 +47,10 @@ const App: React.FC = () => {
         </RuxTableHeaderRow>
       </RuxTableHeader>
       <RuxTableBody>
-        {contacts.map(({ _id, ...c }) => (
-          <RuxTableRow key={_id}>
-            <Center>
-              <RuxCheckbox />
-            </Center>
-            <RuxTableCell>{c.contactName}</RuxTableCell>
-            <RuxTableCell>{c.contactSatellite}</RuxTableCell>
-            <RuxTableCell>{c.contactStatus}</RuxTableCell>
-            <RuxTableCell>{c.contactState}</RuxTableCell>
-            <RuxTableCell>{c.contactStep}</RuxTableCell>
-            <RuxTableCell>{c.contactElevation}</RuxTableCell>
-            <RuxTableCell>
-              <HStack spacing='4'>
-                <Text>{c.alerts.length}</Text>
-                <AlertModal
-                  alerts={c.alerts}
-                  contactName={c.contactName}
-                  contactSatellite={c.contactSatellite}
-                />
-              </HStack>
-            </RuxTableCell>
-          </RuxTableRow>
-        ))}
+        {data.map((contact: any, i: number) => {
+          return <ContactRow key={contact._id} {...contact} />;
+        })}
+        {hasMore && <div ref={triggerRef} />}
       </RuxTableBody>
     </RuxTable>
   );
